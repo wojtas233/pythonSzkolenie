@@ -1,0 +1,49 @@
+from pprint import pprint
+from urllib import request
+from urllib import parse
+import json
+from json import loads
+import collections
+import re
+import time
+import datetime
+
+gitUrl = 'https://api.github.com/repos/django/django/commits'
+response = request.urlopen(gitUrl)
+stringResponse = response.read().decode('utf-8')
+
+results = loads(stringResponse)
+commitsList = list(results)
+#pprint(list(results))
+
+#ISSUE_REGEX = re.compile(r'#(0-9)/+')
+ISSUE_REGEX = re.compile("\\d+")
+
+commits = []
+for item in commitsList:
+    commit_message = item['commit']['message']
+
+    if ISSUE_REGEX.search(commit_message) is not None:
+        issue = ISSUE_REGEX.search(commit_message).group()
+    else:
+        issue = ''
+
+    result = {"author" : item['commit']['author']['name'],
+              "date": item['commit']['author']['date'],
+              "email": item['commit']['author']['email'],
+              "message" : commit_message,
+              "sha": item['commit']['tree']['sha'],
+              "issues": issue
+              }
+    #struct_time = time.strptime(datetime, "%d %b %y")
+    #_strptime("", "")
+    commits.append(result)
+
+with open('/tmp/info-git-commits.json', 'w') as file:
+    file.write(json.dumps(commits))
+
+
+
+
+
+
